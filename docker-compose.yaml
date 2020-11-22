@@ -1,0 +1,27 @@
+version: '3.7'
+services:
+    postgres:
+        image: postgres:11.5
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+    webserver:
+        build: .
+        restart: always
+        depends_on:
+            - postgres
+        environment:
+            - LOAD_EX=n
+            - EXECUTOR=Local
+        volumes:
+            - ./dags:/opt/airflow/dags
+        ports:
+            - "8080:8080"
+        command: embedded
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f /opt/airflow/airflow-webserver.pid ]"]
+            interval: "20s"
+            timeout: "20s"
+            retries: 3
+
