@@ -1,4 +1,6 @@
 version: '3.7'
+volumes:
+    airflowdb: {}
 services:
     postgres:
         image: postgres:11.5
@@ -6,6 +8,8 @@ services:
             - POSTGRES_USER=airflow
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
+        volumes:
+          - airflowdb:/var/lib/postgresql/data
     webserver:
         build: .
         restart: always
@@ -16,6 +20,7 @@ services:
             - EXECUTOR=Local
         volumes:
             - ./dags:/opt/airflow/dags
+            - ./kube:/tmp/k8s/minikube
         ports:
             - "8080:8080"
         command: embedded

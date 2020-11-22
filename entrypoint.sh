@@ -9,7 +9,7 @@ case "$1" in
     airflow users create -u admin -p admin -r Admin -e admin@gmail.com -f Admin -l User
     airflow scheduler &
     exec airflow webserver
-    ;;    
+    ;;
   webserver|worker|scheduler)
     exec airflow "$@"
     ;;
@@ -18,6 +18,7 @@ case "$1" in
    ;;
    *)
     exec "$@"
+   ;; 
 esac
 
 
