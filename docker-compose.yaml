@@ -21,6 +21,7 @@ services:
         volumes:
             - ./dags:/opt/airflow/dags
             - ./kube:/tmp/k8s/minikube
+            - ./airflow.cfg:/opt/airflow/airflow.cfg
         ports:
             - "8080:8080"
         command: embedded

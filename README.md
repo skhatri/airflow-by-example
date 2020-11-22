@@ -61,3 +61,40 @@ Check https://github.com/apache/airflow/blob/master/airflow/providers/cncf/kuber
 ### Adding Init Container
 
 Enable dags/k8s-pod-operator-spark-init.py for data passing between init container and container.
+
+
+### Using API
+Enable basic auth for API by setting airflow.cfg
+```
+auth_backend = airflow.api.auth.backend.basic_auth
+```
+
+List Dags
+
+```
+curl -u admin -X GET "http://localhost:8080/api/v1/dags?limit=50" -H  "accept: application/json"
+```
+
+View a Specific Dag
+```
+curl -u admin:admin -X GET "http://localhost:8080/api/v1/dags/process_etl_linear"
+```
+
+Patch a Dag
+
+```
+curl -u admin:admin -H"Content-Type: application/json" -X PATCH "http://localhost:8080/api/v1/dags/process_etl_linear" -d '{
+  "is_paused": false
+}'
+```
+
+Run a Dag
+
+```
+curl -u admin:admin -X POST "http://localhost:8080/api/v1/dags/process_etl_linear/dagRuns"  \
+-H"Content-Type: application/json" -d '{
+  "conf": {},
+  "dag_run_id": "2020_11_23_2_21_00",
+  "execution_date": "2020-11-22T15:13:15.022Z"  
+}'
+```
