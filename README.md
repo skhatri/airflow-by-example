@@ -56,5 +56,8 @@ Because we are running from outside the cluster, we are setting in_cluster=False
 //TODO: check that serviceaccount file exists in a path and deduce in_cluster flag to be passed to Airflow Kubernetes Pod Operator.
 
 
-Check https://github.com/skhatri/airflow-template/blob/2-kubernetes-pod-operator/dags/k8s-pod-operator.py to see any parameters you might need to configure
+Check https://github.com/apache/airflow/blob/master/airflow/providers/cncf/kubernetes/operators/kubernetes_pod.py to see any parameters you might need to configure
 
+### Adding Init Container
+
+Enable dags/k8s-pod-operator-spark-init.py for data passing between init container and container.
