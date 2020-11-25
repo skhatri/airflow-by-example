@@ -5,9 +5,10 @@ services:
     postgres:
         image: postgres:11.5
         environment:
-            - POSTGRES_USER=airflow
+            - POSTGRES_USER=postgres
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
+            - PGDATA=/var/lib/postgresql/data/pgdata
         volumes:
           - airflowdb:/var/lib/postgresql/data
     webserver:
