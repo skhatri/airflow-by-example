@@ -1,6 +1,7 @@
 version: '3.7'
 volumes:
     airflowdb: {}
+    logs: {}
 services:
     postgres:
         image: postgres:11.5
@@ -22,8 +23,11 @@ services:
         volumes:
             - ./dags:/opt/airflow/dags
             - ./kube:/tmp/k8s/minikube
+            - ./airflow.cfg:/opt/airflow/airflow.cfg
+            - logs:/opt/airflow/logs
         ports:
             - "8080:8080"
+            - "8973:8973"
         command: embedded
         healthcheck:
             test: ["CMD-SHELL", "[ -f /opt/airflow/airflow-webserver.pid ]"]
