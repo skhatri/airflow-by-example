@@ -6,6 +6,15 @@ docker-compose build
 docker-compose up -d
 ```
 
+### Using Kubernetes
+```
+brew install minikube
+minikube start --memory=4096 --cpus=2 --driver=hyperkit \
+--insecure-registry=192.168.64.1:5000 \
+--nodes=1  --nfs-share=$HOME/dev/data/minikube-share --nfs-shares-root=/nfsshares \
+--mount=true --mount-string=$HOME/dev/data/minikube-data:/app/data
+
+```
 ### Using Kubernetes Pod Operator
 We are using minikube's client.crt, client.key, ca.crt and config here. Copy them from your local minikube/kubernetes installation into ./kube folder. This will be mapped to /tmp/k8s in airflow docker container.
 
@@ -98,3 +107,34 @@ curl -u admin:admin -X POST "http://localhost:8080/api/v1/dags/process_etl_linea
   "execution_date": "2020-11-22T15:13:15.022Z"  
 }'
 ```
+
+
+### Running everything inside Kubernetes
+Let's create volumes for postgres and airflow
+```
+kubectl apply -f -<<EOF
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-volume
+  labels:
+    type: local
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/home/docker/data/postgres"
+EOF
+
+```
+
+### Deploy Airflow
+```
+kubectl apply -f kubernetes/postgres.yaml
+kubectl create secret generic airflow-secrets --from-file=GIT_TOKEN=secrets/GIT_TOKEN
+kubectl apply -f kubernetes/airflow.yaml
+```
+

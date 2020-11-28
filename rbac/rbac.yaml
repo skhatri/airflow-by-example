@@ -5,7 +5,7 @@ metadata:
   name: job-trigger-role
 rules:
   - apiGroups: [""]
-    resources: ["pods", "configmaps", "services"]
+    resources: ["pods", "pods/log", "configmaps", "services"]
     verbs: ["get", "watch", "list", "create", "update", "delete"]
 
 ---

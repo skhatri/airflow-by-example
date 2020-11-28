@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: airflow
+  labels:
+    app: airflow
+spec:
+  serviceName: airflow
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airflow
+  template:
+    metadata:
+      labels:
+        app: airflow
+    spec:
+      serviceAccountName: job-trigger-sa
+      initContainers:
+      - name: airflow-dags
+        imagePullPolicy: IfNotPresent
+        image: "192.168.64.1:5000/kubesailmaker/git-checkout:0.6"
+        command:
+        - /bin/sh
+        args:
+        - -c
+        - "/opt/app/git-checkout.sh"
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 1000
+        env:
+        - name: GIT_PROJECTS
+          value: "skhatri/airflow-example-dags.git,/data/checkout/airflow-example-dags,main"
+        - name: GIT_PROTOCOL
+          value: "https"
+        - name: "GIT_BASE"
+          value: "github.com"
+        - name: GIT_USER
+          value: "skhatri"
+        - name: GIT_TOKEN_FILE
+          value: "/data/secrets/git_token"
+        volumeMounts:
+        - mountPath: /data/checkout
+          name: airflow-dags
+        - mountPath: /data/secrets
+          name: secrets-mount
+      containers:
+      - name: airflow
+        imagePullPolicy: IfNotPresent
+        image: "192.168.64.1:5000/airflow_webserver:2.0.5"
+        args: 
+        - embedded
+        ports:
+        - name: airflowport
+          containerPort: 8080
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1400Mi
+          requests:
+            cpu: 500m
+            memory: 1400Mi  
+        env:
+        - name: LOADEX
+          value: "n"
+        - name: EXECUTOR
+          value: "local"
+        volumeMounts:
+        - mountPath: /opt/airflow/dags
+          name: airflow-dags
+      volumes:
+      - name: secrets-mount
+        secret:
+          secretName: airflow-secrets
+          items:
+          - key: GIT_TOKEN
+            path: git_token
+      - name: airflow-dags
+        emptyDir: {}
+         
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: airflow
+spec:
+  selector:
+    app: airflow
+  ports:
+  - name: airflowport
+    protocol: TCP
+    port: 8080
+    targetPort: airflowport
+    nodePort: 31800
+  type: NodePort
