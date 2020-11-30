@@ -15,7 +15,7 @@ import datetime
 from airflow import models
 
 dag = DAG(
-   dag_id="kube-pod-operator",
+   dag_id="kube-pod-operator-cluster",
    start_date=airflow.utils.dates.days_ago(2),
    schedule_interval="@daily",
 )
@@ -36,6 +36,7 @@ kubernetes_min_pod = kubernetes_pod_operator.KubernetesPodOperator(
     namespace='default',
     image='ubuntu:latest',
     in_cluster=in_cluster,
+    executor_config={"LocalExecutor": {}}
     )
 
 
@@ -46,9 +47,8 @@ run_another_pod = kubernetes_pod_operator.KubernetesPodOperator(
     namespace='default',
     image='ubuntu:latest',
     in_cluster=in_cluster,
+    executor_config={"LocalExecutor": {}}
     )
-
-
 
 
 start_kube_process >> kubernetes_min_pod >> run_another_pod

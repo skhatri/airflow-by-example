@@ -91,7 +91,7 @@ k8s_spark_launcher = kubernetes_pod_operator.KubernetesPodOperator(
         '--conf',
         'spark.kubernetes.executor.request.cores=0.4',
         '--conf',
-        'spark.kubernetes.driver.request.cores=0.2',
+        'spark.kubernetes.driver.request.cores=0.2',       
         '--conf',
         'spark.kubernetes.container.image=skhatri/spark-k8s-hello:1.0.7',
         '--conf',
@@ -108,7 +108,8 @@ k8s_spark_launcher = kubernetes_pod_operator.KubernetesPodOperator(
     image='skhatri/spark:v3.0.1',
     in_cluster=in_cluster,
     env_vars=spark_env_vars,
-    service_account_name='job-trigger-sa'
+    service_account_name='job-trigger-sa',
+    executor_config={"LocalExecutor": {}}
 )
 
 
@@ -119,6 +120,7 @@ k8s_pod = kubernetes_pod_operator.KubernetesPodOperator(
     namespace='default',
     image='ubuntu:latest',
     in_cluster=in_cluster,
+    executor_config={"LocalExecutor": {}}
 )
 
 

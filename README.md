@@ -131,10 +131,41 @@ EOF
 
 ```
 
-### Deploy Airflow
+#### Building Local Images for Kubernetes Executor
+
+```
+./build-image 9
+```
+
+#### Deploy Airflow
 ```
 kubectl apply -f kubernetes/postgres.yaml
 kubectl create secret generic airflow-secrets --from-file=GIT_TOKEN=secrets/GIT_TOKEN
 kubectl apply -f kubernetes/airflow.yaml
 ```
 
+#### Running Kubernetes Executor
+Kubernetes Executor requires either the dags to be included in the image or dags to be provided via git sync.
+
+The below configuration choose a separate airflow image where dags are included
+```
+        - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY"
+          value: "192.168.64.1:5000/airflow_dags"
+        - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG"
+          value: "2.0.9"
+        - name: "AIRFLOW__KUBERNETES__DAGS_IN_IMAGE"
+          value: "True"
+```
+
+Although, the pods can be deleted immediately after the DAG tasks and can be controlled by
+
+```
+        - name: "AIRFLOW__KUBERNETES__DELETE_WORKER_PODS"
+          value: "False"
+```
+
+If keeping pod around after the task is complete, the following kubectl command can help delete all pods in bulk
+
+```
+kubectl delete po -l kubernetes_executor=True
+```

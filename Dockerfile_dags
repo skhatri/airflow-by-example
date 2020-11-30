@@ -1,0 +1,3 @@
+FROM airflow_webserver:latest 
+ADD airflow-example-dags /opt/airflow/dags/airflow-example-dags
+

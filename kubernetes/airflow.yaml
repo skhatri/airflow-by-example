@@ -47,7 +47,7 @@ spec:
       containers:
       - name: airflow
         imagePullPolicy: IfNotPresent
-        image: "192.168.64.1:5000/airflow_webserver:2.0.5"
+        image: "192.168.64.1:5000/airflow_webserver:2.0.9"
         args: 
         - embedded
         ports:
@@ -63,8 +63,27 @@ spec:
         env:
         - name: LOADEX
           value: "n"
-        - name: EXECUTOR
-          value: "local"
+        - name: "AIRFLOW__CORE__EXECUTOR"
+          value: "KubernetesExecutor"
+        - name: AIRFLOW__KUBERNETES__IN_CLUSTER
+          value: "True"
+        - name: "AIRFLOW__KUBERNETES__DELETE_WORKER_PODS"
+          value: "False"
+        - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY"
+          value: "192.168.64.1:5000/airflow_dags"
+        - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG"
+          value: "2.0.9"
+        - name: "AIRFLOW__ADMIN__HIDE_SENSITIVE_VARIABLE_FIELDS"
+          value: "True"
+        - name: "AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION"
+          value: "True"
+        - name: "AIRFLOW__WEBSERVER__NAVBAR_COLOR"
+          value: "#9fca08"
+        - name: "AIRFLOW__KUBERNETES__DAGS_IN_IMAGE"
+          value: "True"          
+        - name: "AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME"
+          value: "job-trigger-sa"
+
         volumeMounts:
         - mountPath: /opt/airflow/dags
           name: airflow-dags
