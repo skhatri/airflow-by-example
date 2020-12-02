@@ -12,6 +12,20 @@ services:
             - PGDATA=/var/lib/postgresql/data/pgdata
         volumes:
           - airflowdb:/var/lib/postgresql/data
+    keycloak:
+        image: quay.io/keycloak/keycloak:11.0.3
+        environment: 
+            - DB_USER=postgres
+            - DB_PASSWORD=airflow
+            - DB_ADDR=postgres
+            - DB_VENDOR=POSTGRES
+            - DB_DATABASE=airflow
+            - KEYCLOAK_USER=admin
+            - KEYCLOAK_PASSWORD=admin
+        depends_on:
+            - postgres
+        ports:
+            - "8080:8080"
     webserver:
         build: .
         restart: always
@@ -24,9 +38,11 @@ services:
             - ./dags:/opt/airflow/dags
             - ./kube:/tmp/k8s/minikube
             - ./airflow.cfg:/opt/airflow/airflow.cfg
+            - ./webserver_config.py:/opt/airflow/webserver_config.py
+            - ./manager.py:/home/airflow/.local/lib/python3.8/site-packages/flask_appbuilder/security/manager.py
             - logs:/opt/airflow/logs
         ports:
-            - "8080:8080"
+            - "8280:8280"
             - "8973:8973"
         command: embedded
         healthcheck:

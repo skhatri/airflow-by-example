@@ -169,3 +169,62 @@ If keeping pod around after the task is complete, the following kubectl command 
 ```
 kubectl delete po -l kubernetes_executor=True
 ```
+
+### Securing with Keycloak
+
+Import airflow-realm.json as a realm in keycloak. docker-compose.yaml also mounts manager.py whose ```get_oauth_user_info``` has been update in the following way:
+
+```
+        else:
+            me = self.appbuilder.sm.oauth_remotes[provider].get("userinfo")
+            data = me.json()
+            log.debug("User info from OAuth Provider: {0}".format(data))
+            return {
+                "preferred_username": data.get("preferred_username",""),
+                "first_name": data.get("given_name", ""),
+                "last_name": data.get("family_name", ""),
+                "email": data.get("email", ""),
+                "name": data.get("name", ""),
+                "username": data.get("preferred_username", ""),
+                "id": data.get("sub", "")
+            }
+```
+
+webserver_config.py is also mounted from outside to have the effective value of
+
+```
+from flask_appbuilder.security.manager import AUTH_OAUTH
+AUTH_TYPE = AUTH_OAUTH
+
+AUTH_ROLE_ADMIN = 'Admin'
+
+AUTH_ROLE_PUBLIC = 'Public'
+
+AUTH_USER_REGISTRATION = True
+
+#Do not disable this in production
+OIDC_COOKIE_SECURE = False
+
+OAUTH_PROVIDERS = [
+ {
+   'name': 'airflow-client',
+   'icon': 'fa-key',
+   'token_key': 'access_token', 
+   'remote_app': {
+     'api_base_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/',
+     'client_kwargs': {
+       'scope': 'default'
+     },
+     'request_token_url': None,
+     'access_token_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/token',
+     'authorize_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/auth',
+     'client_id': 'airflow-client',
+     'client_secret': '63daeeda-26a2-4343-9681-5d62c7833af1'
+    }
+  }
+]
+
+```
+
+keycloak's airflow realm can be found in airflow-realm.json
+
