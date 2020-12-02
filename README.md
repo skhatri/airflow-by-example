@@ -1,6 +1,16 @@
 ## Airflow by Example
 This project contains a bunch of Airflow Configurations and DAGs for Kubernetes, Spark based data-pipelines. The examples make use of spark kubernetes master to scale inside a Kubernetes Cluster. The Airflow installation is secured by Keycloak using the OAuth provider integration.
 
+Each example is available in a branch of its own. Here is the list of examples:
+|Branch|Description|
+|------|-----------|
+|1-etl | Basic Airflow run as a docker-compose|
+|2-kubernetes-pod-operator|Execute Few tasks against Kubernetes Cluster using KubernetesPodOperator|
+|3-kubernetes-pod-operator-spark|Execute Spark tasks against Kubernetes Cluster using KubernetesPodOperator. The tasks can scale using spark master support made available in spark 2.3+|
+|4-airflow-on-kubernetes|Run Airflow, Database, Spark all inside Kubernetes Cluster|
+|5-airflow-kubernetes-executor|Run Airflow Tasks with Kubernetes Executor|
+|6-airflow-oauth|Integrate Airflow with Keycloak as the OAuth provider|
+
 ### Running
 
 ```
