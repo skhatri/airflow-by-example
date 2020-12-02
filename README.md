@@ -1,3 +1,6 @@
+## Airflow by Example
+This project contains a bunch of Airflow Configurations and DAGs for Kubernetes, Spark based data-pipelines. The examples make use of spark kubernetes master to scale inside a Kubernetes Cluster. The Airflow installation is secured by Keycloak using the OAuth provider integration.
+
 ### Running
 
 ```
