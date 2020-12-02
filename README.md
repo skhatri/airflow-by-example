@@ -186,9 +186,12 @@ Import airflow-realm.json as a realm in keycloak. docker-compose.yaml also mount
                 "email": data.get("email", ""),
                 "name": data.get("name", ""),
                 "username": data.get("preferred_username", ""),
-                "id": data.get("sub", "")
+                "id": data.get("sub", ""),
+                "roles": data.get("roles", [])
             }
 ```
+
+Note, if using keycloak <= 11.x, roles need to be configured
 
 webserver_config.py is also mounted from outside to have the effective value of
 
@@ -219,7 +222,7 @@ OAUTH_PROVIDERS = [
      'access_token_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/token',
      'authorize_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/auth',
      'client_id': 'airflow-client',
-     'client_secret': '63daeeda-26a2-4343-9681-5d62c7833af1'
+     'client_secret': '9e661802-3356-44f3-8960-1dc890abd2bc'
     }
   }
 ]
@@ -228,3 +231,43 @@ OAUTH_PROVIDERS = [
 
 keycloak's airflow realm can be found in airflow-realm.json
 
+#### Testing OAuth Integration
+```
+docker-compose up -d
+```
+
+update /etc/hosts with the following entry
+```
+127.0.0.1   airflow keycloak
+```
+
+#### Import realm data
+
+```
+cp realms/airflow-realm.json realms/import.json
+
+docker exec -it airflow_keycloak_1 /opt/jboss/keycloak/bin/standalone.sh \
+  -Djboss.socket.binding.port-offset=100 \
+  -Dkeycloak.migration.action=import \
+  -Dkeycloak.migration.provider=singleFile \
+  -Dkeycloak.migration.strategy=OVERWRITE_EXISTING \
+  -Dkeycloak.migration.file=/tmp/realms/import.json
+
+```
+
+Test your OAuth connectivity using:
+open http://airflow:8280/
+
+
+
+#### Export Realm Data
+```
+docker exec -it airflow_keycloak_1 /opt/jboss/keycloak/bin/standalone.sh \
+  -Djboss.socket.binding.port-offset=100 \
+  -Dkeycloak.migration.action=export \
+  -Dkeycloak.migration.realm=airflow \
+  -Dkeycloak.migration.provider=singleFile \
+  -Dkeycloak.migration.file=/tmp/realms/export.json
+
+cp realms/export.json realms/airflow-realm.json
+```

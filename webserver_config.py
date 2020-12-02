@@ -93,7 +93,7 @@ OAUTH_PROVIDERS = [
      'access_token_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/token',
      'authorize_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/auth',
      'client_id': 'airflow-client',
-     'client_secret': '63daeeda-26a2-4343-9681-5d62c7833af1'
+     'client_secret': '9e661802-3356-44f3-8960-1dc890abd2bc'
     }
   }
 ]

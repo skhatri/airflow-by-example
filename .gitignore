@@ -1,3 +1,7 @@
 dags/excluded
 secrets
 
+import.json
+export.json
+__pycache__
+

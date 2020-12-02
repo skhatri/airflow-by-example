@@ -1067,6 +1067,15 @@ class BaseSecurityManager(AbstractSecurityManager):
                 log.error("Error creating a new OAuth user %s" % userinfo["username"])
                 return None
 
+        roles=[]
+        required_roles=["Admin", "Public", "Viewer", "User", "Op"]
+
+        for recognized_role in required_roles:
+            if recognized_role in userinfo["roles"]:
+                roles.append(self.find_role(recognized_role))
+        user.roles.clear()
+        user.roles=roles
+
         self.update_user_auth_stat(user)
         log.debug("current user roles {0}".format(user.roles))
         return user
