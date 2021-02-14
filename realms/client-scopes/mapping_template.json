@@ -1,0 +1,10 @@
+[
+    {
+        "id": "__ID__",
+        "name": "Admin",
+        "description": "Admin",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "airflow"
+    }
+]

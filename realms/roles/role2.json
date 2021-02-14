@@ -1,0 +1,8 @@
+{
+    "id" : "1b2349cb-0c06-4420-8c9d-7fdacabc147e",
+    "name" : "User",
+    "description" : "User",
+    "composite" : false,
+    "clientRole" : false,
+    "containerId" : "airflow"
+  }

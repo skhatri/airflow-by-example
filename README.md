@@ -257,14 +257,46 @@ update /etc/hosts with the following entry
 #### Import realm data
 
 ```
-cp realms/airflow-realm.json realms/import.json
+docker exec -it airflow_keycloak_1 bash
 
-docker exec -it airflow_keycloak_1 /opt/jboss/keycloak/bin/standalone.sh \
-  -Djboss.socket.binding.port-offset=100 \
-  -Dkeycloak.migration.action=import \
-  -Dkeycloak.migration.provider=singleFile \
-  -Dkeycloak.migration.strategy=OVERWRITE_EXISTING \
-  -Dkeycloak.migration.file=/tmp/realms/import.json
+
+#run the following to import keycloak data
+
+export KEYCLOAK_HOME=/opt/jboss/keycloak
+export PATH=$PATH:$KEYCLOAK_HOME/bin
+
+kcadm.sh config credentials --server http://localhost:8080/auth --realm master --user admin --password admin
+
+kcadm.sh create realms -f /tmp/realms/airflow-realm-data.json
+kcadm.sh create client-scopes -r airflow -f /tmp/realms/client-scopes/scope1.json
+kcadm.sh create clients -r airflow -f /tmp/realms/clients/single-client.json
+
+kcadm.sh create roles -r airflow -f /tmp/realms/roles/role1.json
+kcadm.sh create roles -r airflow -f /tmp/realms/roles/role2.json
+kcadm.sh create roles -r airflow -f /tmp/realms/roles/role3.json
+kcadm.sh create roles -r airflow -f /tmp/realms/roles/role4.json
+
+kcadm.sh create users -r airflow -f /tmp/realms/users/user2.json
+user_id=$(kcadm.sh get users -r airflow|grep airflow -C 3|grep "id"|awk -F" " '{print $3}'|sed s/,//g|sed s/\"//g)
+kcadm.sh update users/${user_id}/reset-password -r airflow -s type=password -s value=airflow -s temporary=false -n
+
+
+role_id=$(kcadm.sh get roles -r airflow|grep Admin -C 2|grep "id"|awk -F" " '{print $3}'|sed s/,//g|sed s/\"//g)
+sed s/__ID__/${role_id}/ /tmp/realms/client-scopes/mapping_template.json|tee /tmp/realms/client-scopes/mappings.json
+kcadm.sh create client-scopes/025074e3-3874-4263-b026-489587d3417f/scope-mappings/realm -r airflow -f /tmp/realms/client-scopes/mappings.json
+kcadm.sh create users/${user_id}/role-mappings/realm -r airflow -f /tmp/realms/client-scopes/mappings.json
+
+```
+
+#### Verification
+
+```
+
+Verify that Admin, Public, User are effective roles in the keycloak Default Client Scope 
+http://localhost:8080/auth/admin/master/console/#/realms/airflow/client-scopes/025074e3-3874-4263-b026-489587d3417f/scope-mappings
+
+Verify that User Airflow is assigned Admin,Public,User role
+http://localhost:8080/auth/admin/master/console/#/realms/airflow/users/9e41a8d4-ea41-471e-b194-018465d3df66/role-mappings
 
 ```
 
@@ -275,12 +307,23 @@ open http://airflow:8280/
 
 #### Export Realm Data
 ```
-docker exec -it airflow_keycloak_1 /opt/jboss/keycloak/bin/standalone.sh \
-  -Djboss.socket.binding.port-offset=100 \
-  -Dkeycloak.migration.action=export \
-  -Dkeycloak.migration.realm=airflow \
-  -Dkeycloak.migration.provider=singleFile \
-  -Dkeycloak.migration.file=/tmp/realms/export.json
+docker exec -it airflow_keycloak_1 bash
 
-cp realms/export.json realms/airflow-realm.json
+
+#run the following to export keycloak data
+
+export KEYCLOAK_HOME=/opt/jboss/keycloak
+export PATH=$PATH:$KEYCLOAK_HOME/bin
+
+kcadm.sh config credentials --server http://localhost:8080/auth --realm master --user admin --password admin
+
+
+kcadm.sh get realms/airflow > /tmp/realms/airflow-realm-data.json
+kcadm.sh get clients -r airflow > /tmp/realms/airflow-clients.json
+kcadm.sh get roles -r airflow > /tmp/realms/airflow-roles.json
+kcadm.sh get users -r airflow > /tmp/realms/airflow-users.json
+kcadm.sh get users -r airflow > /tmp/realms/airflow-users.json
+kcadm.sh get serverinfo -r airflow > /tmp/realms/airflow-server-info.json
+kcadm.sh get client-scopes -r airflow > /tmp/realms/airflow-client-scopes.json 
+
 ```

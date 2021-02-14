@@ -4,4 +4,5 @@ secrets
 import.json
 export.json
 __pycache__
+postgres-data
 

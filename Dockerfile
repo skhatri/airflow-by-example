@@ -1,4 +1,4 @@
-FROM apache/airflow:2.0.0b2-python3.8
+FROM apache/airflow:2.0.0-python3.8
 USER root
 RUN mkdir -p /opt/app/
 COPY entrypoint.sh /opt/app/entrypoint.sh

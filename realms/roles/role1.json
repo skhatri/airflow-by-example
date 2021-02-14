@@ -1,0 +1,8 @@
+{
+    "id" : "348bac1a-91b3-4a91-87fa-a7ea009e4c61",
+    "name" : "Admin",
+    "description" : "Admin",
+    "composite" : false,
+    "clientRole" : false,
+    "containerId" : "airflow"
+  }

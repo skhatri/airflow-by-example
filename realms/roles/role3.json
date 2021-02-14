@@ -1,0 +1,8 @@
+{
+    "id" : "c3af0cd0-e2a8-4da5-80fe-e985d0713d20",
+    "name" : "Viewer",
+    "description" : "Viewer",
+    "composite" : false,
+    "clientRole" : false,
+    "containerId" : "airflow"
+  }

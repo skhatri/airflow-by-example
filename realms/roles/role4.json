@@ -1,0 +1,8 @@
+{
+    "id" : "4fc4dd0a-0a60-46b0-b659-1c98ed5e3409",
+    "name" : "Public",
+    "description" : "Public",
+    "composite" : false,
+    "clientRole" : false,
+    "containerId" : "airflow"
+  }

@@ -1,0 +1,21 @@
+{
+    "id" : "3a70c36b-d13b-4159-9032-19af39cee526",
+    "createdTimestamp" : 1606894611453,
+    "username" : "airflow",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Airflow",
+    "lastName" : "Admin",
+    "email" : "airflow@gmail.com",
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "notBefore" : 0,
+    "access" : {
+      "manageGroupMembership" : true,
+      "view" : true,
+      "mapRoles" : true,
+      "impersonate" : true,
+      "manage" : true
+    }
+  }
