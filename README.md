@@ -165,9 +165,9 @@ Kubernetes Executor requires either the dags to be included in the image or dags
 The below configuration choose a separate airflow image where dags are included
 ```
         - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY"
-          value: "192.168.64.1:5000/airflow_dags"
+          value: "skhatri/airflow-example-dags"
         - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG"
-          value: "2.0.9"
+          value: "1.0.7"
         - name: "AIRFLOW__KUBERNETES__DAGS_IN_IMAGE"
           value: "True"
 ```

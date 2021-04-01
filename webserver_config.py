@@ -18,7 +18,7 @@
 """Default configuration for the Airflow webserver"""
 import os
 
-# from flask_appbuilder.security.manager import AUTH_DB
+from flask_appbuilder.security.manager import AUTH_DB
 
 # from flask_appbuilder.security.manager import AUTH_LDAP
 from flask_appbuilder.security.manager import AUTH_OAUTH
@@ -38,65 +38,44 @@ WTF_CSRF_ENABLED = True
 # http://flask-appbuilder.readthedocs.io/en/latest/security.html# authentication-methods
 # for details.
 
+if "AUTH_OAUTH" == os.getenv("AUTH_TYPE"):
+  AUTH_TYPE = AUTH_OAUTH
+else:
+  AUTH_TYPE = AUTH_DB
+
 # The authentication type
 # AUTH_OID : Is for OpenID
 # AUTH_DB : Is for database
 # AUTH_LDAP : Is for LDAP
 # AUTH_REMOTE_USER : Is for using REMOTE_USER from web server
 # AUTH_OAUTH : Is for OAuth
-AUTH_TYPE = AUTH_OAUTH
 
-# Uncomment to setup Full admin role name
-AUTH_ROLE_ADMIN = 'Admin'
+if AUTH_TYPE == AUTH_OAUTH:
+  # Uncomment to setup Full admin role name
+  AUTH_ROLE_ADMIN = 'Admin'
+  AUTH_ROLE_PUBLIC = 'Public'
+  AUTH_USER_REGISTRATION = False
 
-# Uncomment to setup Public role name, no authentication needed
-AUTH_ROLE_PUBLIC = 'Public'
+  OIDC_COOKIE_SECURE = False
 
-# Will allow user self registration
-AUTH_USER_REGISTRATION = True
-
-#Do not disable this in production
-OIDC_COOKIE_SECURE = False
-
-# The default user self registration role
-# AUTH_USER_REGISTRATION_ROLE = "Public"
-
-# When using OAuth Auth, uncomment to setup provider(s) info
-# Google OAuth example:
-# OAUTH_PROVIDERS = [{
-#   'name':'google',
-#     'token_key':'access_token',
-#     'icon':'fa-google',
-#         'remote_app': {
-#             'api_base_url':'https://www.googleapis.com/oauth2/v2/',
-#             'client_kwargs':{
-#                 'scope': 'email profile'
-#             },
-#             'access_token_url':'https://accounts.google.com/o/oauth2/token',
-#             'authorize_url':'https://accounts.google.com/o/oauth2/auth',
-#             'request_token_url': None,
-#             'client_id': GOOGLE_KEY,
-#             'client_secret': GOOGLE_SECRET_KEY,
-#         }
-# }]
-OAUTH_PROVIDERS = [
- {
-   'name': 'keycloak',
-   'icon': 'fa-key',
-   'token_key': 'access_token', 
-   'remote_app': {
-     'api_base_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/',
-     'client_kwargs': {
-       'scope': 'default'
-     },
-     'request_token_url': None,
-     'access_token_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/token',
-     'authorize_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/auth',
-     'client_id': 'airflow-client',
-     'client_secret': '9e661802-3356-44f3-8960-1dc890abd2bc'
+  OAUTH_PROVIDERS = [
+  {
+    'name': 'keycloak',
+    'icon': 'fa-key',
+    'token_key': 'access_token', 
+    'remote_app': {
+      'api_base_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/',
+      'client_kwargs': {
+        'scope': 'default'
+      },
+      'request_token_url': None,
+      'access_token_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/token',
+      'authorize_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/auth',
+      'client_id': 'airflow-client',
+      'client_secret': '9e661802-3356-44f3-8960-1dc890abd2bc'
+      }
     }
-  }
-]
+  ]
 
 # When using LDAP Auth, setup the ldap server
 # AUTH_LDAP_SERVER = "ldap://ldapserver.new"
