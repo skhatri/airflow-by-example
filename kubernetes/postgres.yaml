@@ -18,7 +18,7 @@ spec:
       containers:
       - name: postgres
         imagePullPolicy: IfNotPresent
-        image: "192.168.64.1:5000/postgres:11.5"
+        image: "postgres:11.5"
         ports:
         - name: postgresport
           containerPort: 5432

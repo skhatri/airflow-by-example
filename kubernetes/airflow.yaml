@@ -19,15 +19,16 @@ spec:
       initContainers:
       - name: airflow-dags
         imagePullPolicy: IfNotPresent
-        image: "192.168.64.1:5000/kubesailmaker/git-checkout:0.6"
+        image: "kubesailmaker/git-checkout:0.6"
         command:
         - /bin/sh
         args:
         - -c
-        - "/opt/app/git-checkout.sh"
+        - "cd /data/checkout; /opt/app/git-checkout.sh"
         securityContext:
-          runAsUser: 0
-          runAsGroup: 1000
+          runAsUser: 1000
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
         env:
         - name: GIT_PROJECTS
           value: "skhatri/airflow-example-dags.git,/data/checkout/airflow-example-dags,main"
@@ -44,22 +45,29 @@ spec:
           name: airflow-dags
         - mountPath: /data/secrets
           name: secrets-mount
+        - name: tmp-dir
+          mountPath: /tmp
       containers:
       - name: airflow
         imagePullPolicy: IfNotPresent
-        image: "192.168.64.1:5000/airflow_webserver:2.0.9"
+        #image: "kubesailmaker/airflow:2.0.0-python3.8-b3"
+        image: "192.168.64.1:5000/airflow_dags:2.0.7"
         args: 
         - embedded
+        securityContext:
+          runAsUser: 50000
+          runAsNonRoot: true 
+          readOnlyRootFilesystem: true
         ports:
         - name: airflowport
-          containerPort: 8080
+          containerPort: 8280
         resources:
           limits:
-            cpu: 500m
-            memory: 1400Mi
+            cpu: 1
+            memory: 1600Mi
           requests:
-            cpu: 500m
-            memory: 1400Mi  
+            cpu: 1
+            memory: 1600Mi  
         env:
         - name: LOADEX
           value: "n"
@@ -68,11 +76,11 @@ spec:
         - name: AIRFLOW__KUBERNETES__IN_CLUSTER
           value: "True"
         - name: "AIRFLOW__KUBERNETES__DELETE_WORKER_PODS"
-          value: "False"
+          value: "True"
         - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY"
           value: "192.168.64.1:5000/airflow_dags"
         - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG"
-          value: "2.0.9"
+          value: "2.0.7"
         - name: "AIRFLOW__ADMIN__HIDE_SENSITIVE_VARIABLE_FIELDS"
           value: "True"
         - name: "AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION"
@@ -83,10 +91,35 @@ spec:
           value: "True"          
         - name: "AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME"
           value: "job-trigger-sa"
+        - name: "AIRFLOW_TEST_CONFIG"
+          value: "/opt/airflow-work-dir/unittests.cfg"
+        - name: "AIRFLOW_CONFIG"
+          value: "/opt/airflow/airflow.cfg"
+        - name: "WEBSERVER_CONFIG"
+          value: "/opt/airflow/webserver_config.py"
+        - name: "AIRFLOW__CORE__DAGS_FOLDER"
+          value: "/opt/app/dags"
+        - name: "AIRFLOW__LOGGING__BASE_LOG_FOLDER"
+          value: "/opt/app/logs"
+        - name: "AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT"
+          value: "300"
+        - name: "AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT"
+          value: "300"
 
         volumeMounts:
-        - mountPath: /opt/airflow/dags
+        - mountPath: /opt/app/dags
           name: airflow-dags
+        - mountPath: /opt/app/logs
+          name: airflow-logs-dir
+        - mountPath: /opt/airflow
+          name: airflow-home
+        - mountPath: /opt/work
+          name: work-dir
+        - mountPath: /tmp
+          name: tmp-dir
+        - mountPath: /opt/airflow-work-dir
+          name: airflow-work-dir
+
       volumes:
       - name: secrets-mount
         secret:
@@ -96,7 +129,16 @@ spec:
             path: git_token
       - name: airflow-dags
         emptyDir: {}
-         
+      - name: airflow-home
+        emptyDir: {}
+      - name: airflow-logs-dir
+        emptyDir: {}
+      - name: tmp-dir
+        emptyDir: {}
+      - name: airflow-work-dir
+        emptyDir: {}
+      - name: work-dir
+        emptyDir: {}         
 ---
 kind: Service
 apiVersion: v1
@@ -108,7 +150,7 @@ spec:
   ports:
   - name: airflowport
     protocol: TCP
-    port: 8080
+    port: 8280
     targetPort: airflowport
     nodePort: 31800
   type: NodePort
