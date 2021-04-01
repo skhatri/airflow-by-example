@@ -5,6 +5,11 @@ import airflow
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
+import os
+
+img_name=os.getenv("AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY")
+img_tag=os.getenv("AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG")
+img="%s:%s" % (img_name, img_tag)
 
 dag = DAG(
    dag_id="process_etl_linear",
@@ -35,14 +40,14 @@ load_into_database = PythonOperator(
     task_id="load_into_database",
     python_callable=_load_into_database,
     dag=dag,
-    executor_config={"KubernetesExecutor": {"image": "192.168.64.1:5000/airflow_dags:2.0.9"}},
+    executor_config={"KubernetesExecutor": {"image": img }},
 )
 
 summary = BashOperator(
     task_id="summary",
     bash_command='echo "Finished processing input file"',
     dag=dag,
-    executor_config={"KubernetesExecutor": {"image": "192.168.64.1:5000/airflow_dags:2.0.9"}},
+    executor_config={"KubernetesExecutor": {"image": img }},
 )
 
 

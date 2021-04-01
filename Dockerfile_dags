@@ -1,3 +1,7 @@
 FROM airflow_webserver:latest 
 ADD airflow-example-dags /opt/airflow/dags/airflow-example-dags
 
+RUN ln -s /opt/airflow/dags /opt/app/dags
+
+
+
