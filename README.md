@@ -327,3 +327,24 @@ kcadm.sh get serverinfo -r airflow > /tmp/realms/airflow-server-info.json
 kcadm.sh get client-scopes -r airflow > /tmp/realms/airflow-client-scopes.json 
 
 ```
+
+#### Export Airflow and Realm Data from DB
+
+```
+docker exec -it airflow_postgres_1 bash
+#run the following inside the container
+
+cd /tmp/data
+pg_dump -Upostgres -d keycloak > keycloak.pgsql
+pg_dump -Upostgres -d airflow > airflow.pgsql
+
+```
+This will be stored in sql/data folder of your project.
+
+#### Import Airflow and Realm Data to DB
+```
+docker exec -it airflow_postgres_1 bash
+cd /tmp/data
+psql -Upostgres keycloak < keycloak.pgsql
+psql -Upostgres airflow < airflow.pgsql 
+```

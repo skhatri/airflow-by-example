@@ -1,6 +1,7 @@
 dags/excluded
 secrets
-
+logs
+.idea
 import.json
 export.json
 __pycache__
