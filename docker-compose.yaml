@@ -43,7 +43,8 @@ services:
         ports:
             - "8080:8080"
     webserver:
-        build: .
+        image: kubesailmaker/airflow:2.0.0-python3.8
+        #build: .
         restart: always
         depends_on:
           postgres:
@@ -51,13 +52,14 @@ services:
         environment:
             - LOAD_EX=n
             - EXECUTOR=Local
+            - AUTH_TYPE=AUTH_OAUTH
         volumes:
             - ./dags:/opt/airflow/dags
             - ./kube:/tmp/k8s/minikube
             - ./airflow.cfg:/opt/airflow/airflow.cfg
             - ./webserver_config.py:/opt/airflow/webserver_config.py
             - ./manager.py:/home/airflow/.local/lib/python3.8/site-packages/flask_appbuilder/security/manager.py
-            - logs:/opt/airflow/logs
+            - ./logs:/opt/airflow/logs
         ports:
             - "8280:8280"
             - "8973:8973"
