@@ -44,7 +44,7 @@ services:
             - "8080:8080"
     webserver:
         image: kubesailmaker/airflow:2.0.0-python3.8
-        #build: .
+        build: .
         restart: always
         depends_on:
           postgres:
@@ -53,8 +53,9 @@ services:
             - LOAD_EX=n
             - EXECUTOR=Local
             - AUTH_TYPE=AUTH_OAUTH
+            - IN_CLUSTER=False
         volumes:
-            - ./dags:/opt/airflow/dags
+            - ./airflow-example-dags/dags:/opt/airflow/dags
             - ./kube:/tmp/k8s/minikube
             - ./airflow.cfg:/opt/airflow/airflow.cfg
             - ./webserver_config.py:/opt/airflow/webserver_config.py

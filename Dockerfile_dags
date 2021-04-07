@@ -1,7 +1,22 @@
-FROM airflow_webserver:latest 
-ADD airflow-example-dags /opt/airflow/dags/airflow-example-dags
-
+FROM apache/airflow:2.0.0-python3.8
+USER root
+RUN mkdir -p /opt/app
+COPY --chown=airflow:airflow entrypoint.sh /opt/app/entrypoint.sh
+COPY --chown=airflow:airflow airflow.cfg /opt/airflow/airflow.cfg
+COPY --chown=airflow:airflow webserver_config.py /opt/airflow/webserver_config.py
+COPY --chown=airflow:airflow airflow_local_settings.py /opt/airflow/airflow_local_settings.py
+COPY --chown=airflow:airflow airflow-example-dags /opt/airflow/dags/airflow-example-dags
 RUN ln -s /opt/airflow/dags /opt/app/dags
 
+RUN chmod a+x /opt/app/entrypoint.sh && chown -R airflow /opt/app /opt/airflow
 
-
+USER airflow
+RUN /usr/local/bin/python -m pip install --upgrade pip && \
+    pip3 install "apache-airflow[jdbc]" && \
+    pip3 install "apache-airflow[ldap]" && \
+    pip3 install "apache-airflow[password]" && \
+    pip3 install "apache-airflow[postgres]" && \
+    pip3 install "apache-airflow[kubernetes]" && \
+    pip3 install oauth2client authlib
+WORKDIR "/opt/work"
+ENTRYPOINT ["airflow"]

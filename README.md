@@ -11,7 +11,7 @@ Each example is available in a branch of its own. Here is the list of examples:
 |4-airflow-on-kubernetes|Run Airflow, Database, Spark all inside Kubernetes Cluster|
 |5-airflow-kubernetes-executor|Run Airflow Tasks with Kubernetes Executor|
 |6-airflow-oauth|Integrate Airflow with Keycloak as the OAuth provider|
-
+|7-run-as-non-root|Run Airflow Kubernetes workloads as non root user|
 
 ### Running
 
@@ -20,72 +20,6 @@ docker-compose build
 
 docker-compose up -d
 ```
-
-### Using Kubernetes
-```
-brew install minikube
-minikube start --memory=4096 --cpus=2 --driver=hyperkit \
---insecure-registry=192.168.64.1:5000 \
---nodes=1  --nfs-share=$HOME/dev/data/minikube-share --nfs-shares-root=/nfsshares \
---mount=true --mount-string=$HOME/dev/data/minikube-data:/app/data
-
-```
-### Using Kubernetes Pod Operator
-We are using minikube's client.crt, client.key, ca.crt and config here. Copy them from your local minikube/kubernetes installation into ./kube folder. This will be mapped to /tmp/k8s in airflow docker container.
-
-My ~/.kube/config is transformed like so for usage from inside the docker container
-
-```
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority: /tmp/k8s/minikube/ca.crt
-    server: https://192.168.64.2:8443
-  name: minikube
-contexts:
-- context:
-    cluster: minikube
-    user: minikube
-  name: minikube
-current-context: minikube
-kind: Config
-preferences: {}
-users:
-- name: minikube
-  user:
-    client-certificate: /tmp/k8s/minikube/client.crt
-    client-key: /tmp/k8s/minikube/client.key
-
-```
-server: value should be set to your kubernetes master which you can find by using the below command
-
-```
-kubectl cluster-info|grep master
-```
-
-
-### Running Spark Submit using Kubernetes Pod Operator
-
-Create service account and grant roles to create/delete pod
-
-```
-kubectl apply -f rbac/sa.yaml
-kubectl apply -f rbac/rbac.yaml
-```
-
-Enable dags/k8s-pod-operator-spark.py
-
-Because we are running from outside the cluster, we are setting in_cluster=False and we still need to upload kube config to airflow docker image. If your airflow is running inside the cluster, simply change in_cluster=True. 
-
-//TODO: check that serviceaccount file exists in a path and deduce in_cluster flag to be passed to Airflow Kubernetes Pod Operator.
-
-
-Check https://github.com/apache/airflow/blob/master/airflow/providers/cncf/kubernetes/operators/kubernetes_pod.py to see any parameters you might need to configure
-
-### Adding Init Container
-
-Enable dags/k8s-pod-operator-spark-init.py for data passing between init container and container.
-
 
 ### Using API
 Enable basic auth for API by setting airflow.cfg
@@ -123,8 +57,50 @@ curl -u admin:admin -X POST "http://localhost:8080/api/v1/dags/process_etl_linea
 }'
 ```
 
+### Using Kubernetes
+```
+brew install minikube
+minikube start --memory=4096 --cpus=2 --driver=hyperkit \
+--insecure-registry=192.168.64.1:5000 \
+--nodes=1  --nfs-share=$HOME/dev/data/minikube-share --nfs-shares-root=/nfsshares \
+--mount=true --mount-string=$HOME/dev/data/minikube-data:/app/data \
+--extra-config=apiserver.enable-admission-plugins=PodSecurityPolicy --addons=pod-security-policy
+```
+### Using Kubernetes Pod Operator
+We are using minikube's client.crt, client.key, ca.crt and config here. Copy them from your local minikube/kubernetes installation into ./kube folder. This will be mapped to /tmp/k8s in airflow docker container.
 
-### Running everything inside Kubernetes
+My ~/.kube/config is transformed like so for usage from inside the docker container
+
+```
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /tmp/k8s/minikube/ca.crt
+    server: https://192.168.64.2:8443
+  name: minikube
+contexts:
+- context:
+    cluster: minikube
+    user: minikube
+  name: minikube
+current-context: minikube
+kind: Config
+preferences: {}
+users:
+- name: minikube
+  user:
+    client-certificate: /tmp/k8s/minikube/client.crt
+    client-key: /tmp/k8s/minikube/client.key
+
+```
+server: value should be set to your kubernetes master which you can find by using the below command
+
+```
+kubectl cluster-info|grep master
+```
+
+
+### Create Persistent Volume for Postgres
 Let's create volumes for postgres and airflow
 ```
 kubectl apply -f -<<EOF
@@ -146,10 +122,50 @@ EOF
 
 ```
 
-#### Building Local Images for Kubernetes Executor
+### Running Spark Submit using Kubernetes Pod Operator
+
+Create service account and grant roles to create/delete pod
 
 ```
-./build-image 9
+kubectl apply -f rbac/policies-default.yaml
+kubectl apply -f rbac/policies-job.yaml
+
+kubectl apply -f sa-postgres.yaml
+kubectl apply -f rbac/sa.yaml
+kubectl apply -f rbac/rbac.yaml
+```
+
+
+### Adding Init Container
+
+Enable dags/k8s-pod-operator-spark-init.py for data passing between init container and container.
+Check https://github.com/apache/airflow/blob/master/airflow/providers/cncf/kubernetes/operators/kubernetes_pod.py to see any parameters you might need to configure
+
+
+#### Building Local Images for Kubernetes Executor
+Build images locally if you are wanting to try out different combinations and for quick feedback.
+We shall also push the images to a local registry. Run the registry using the following:
+
+```
+docker run -v $HOME/dev/data/registry:/var/lib/registry -p 5000:5000 --name registry -id registry:2
+```
+
+Let's also pull spark demo images so the local builder can upload those images to the registry as well.
+
+```
+docker pull skhatri/spark:v3.0.1-b1
+docker tag skhatri/spark:v3.0.1-b1 localhost:5000/spark:v3.0.1-b1
+docker pull skhatri/spark-k8s-hello:1.0.11
+docker tag skhatri/spark-k8s-hello:1.0.11 localhost:5000/spark-k8s-hello:1.0.11
+```
+
+The below command will build the airflow webserver and airflow worker (with dags) images. It will 
+also replace image placeholders in kubernetes/airflow-template.yaml and will create kubernetes/airflow.yaml which
+can be deployed to Kubernetes. The minio instance can download the images from your local repository using 192.168.64.1:5000
+as the registry base.
+
+```
+./build-image.sh 2.1.0
 ```
 
 #### Deploy Airflow
@@ -165,9 +181,9 @@ Kubernetes Executor requires either the dags to be included in the image or dags
 The below configuration choose a separate airflow image where dags are included
 ```
         - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY"
-          value: "skhatri/airflow-example-dags"
+          value: "192.168.64.1:5000/airflow-example-dags"
         - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG"
-          value: "1.0.7"
+          value: "1.0.11"
         - name: "AIRFLOW__KUBERNETES__DAGS_IN_IMAGE"
           value: "True"
 ```

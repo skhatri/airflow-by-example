@@ -15,6 +15,7 @@ spec:
       labels:
         app: postgres
     spec:
+      serviceAccountName: postgres-sa
       containers:
       - name: postgres
         imagePullPolicy: IfNotPresent

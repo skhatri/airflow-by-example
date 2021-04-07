@@ -51,7 +51,7 @@ spec:
       - name: airflow
         imagePullPolicy: IfNotPresent
         #image: "kubesailmaker/airflow:2.0.0-python3.8-b3"
-        image: "192.168.64.1:5000/airflow_dags:2.0.7"
+        image: "192.168.64.1:5000/airflow_webserver:2.1.3.6"
         args: 
         - embedded
         securityContext:
@@ -63,16 +63,16 @@ spec:
           containerPort: 8280
         resources:
           limits:
-            cpu: 1
+            cpu: "600m"
             memory: 1600Mi
           requests:
-            cpu: 1
+            cpu: "600m"
             memory: 1600Mi  
         env:
         - name: LOADEX
           value: "n"
         - name: "AIRFLOW__CORE__EXECUTOR"
-          value: "KubernetesExecutor"
+          value: "SequentialExecutor"
         - name: AIRFLOW__KUBERNETES__IN_CLUSTER
           value: "True"
         - name: "AIRFLOW__KUBERNETES__DELETE_WORKER_PODS"
@@ -80,7 +80,7 @@ spec:
         - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY"
           value: "192.168.64.1:5000/airflow_dags"
         - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG"
-          value: "2.0.7"
+          value: "2.1.3.6"
         - name: "AIRFLOW__ADMIN__HIDE_SENSITIVE_VARIABLE_FIELDS"
           value: "True"
         - name: "AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION"
@@ -105,7 +105,12 @@ spec:
           value: "300"
         - name: "AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT"
           value: "300"
-
+        - name: "SPARK_LAUNCHER_IMAGE"
+          value: "192.168.64.1:5000/spark:v3.0.1-b1"
+        - name: "SPARK_JOB_IMAGE"
+          value: "192.168.64.1:5000/spark-k8s-hello:1.0.11"
+        - name: "AUTH_TYPE"
+          value: "DB"
         volumeMounts:
         - mountPath: /opt/app/dags
           name: airflow-dags

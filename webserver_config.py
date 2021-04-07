@@ -50,8 +50,8 @@ else:
 # AUTH_REMOTE_USER : Is for using REMOTE_USER from web server
 # AUTH_OAUTH : Is for OAuth
 
-if AUTH_TYPE == AUTH_OAUTH:
   # Uncomment to setup Full admin role name
+if AUTH_TYPE == AUTH_OAUTH:
   AUTH_ROLE_ADMIN = 'Admin'
   AUTH_ROLE_PUBLIC = 'Public'
   AUTH_USER_REGISTRATION = False
@@ -62,7 +62,7 @@ if AUTH_TYPE == AUTH_OAUTH:
   {
     'name': 'keycloak',
     'icon': 'fa-key',
-    'token_key': 'access_token', 
+    'token_key': 'access_token',
     'remote_app': {
       'api_base_url': 'http://keycloak:8080/auth/realms/airflow/protocol/openid-connect/',
       'client_kwargs': {

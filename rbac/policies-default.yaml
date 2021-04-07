@@ -1,0 +1,41 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: default-policy
+spec:
+  hostIPC: false
+  hostPID: false
+  hostNetwork: false
+  privileged: false
+  readOnlyRootFilesystem: false
+  seLinux:
+    rule: RunAsAny
+
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      - min: 0
+        max: 65535
+
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      - min: 0
+        max: 65535
+
+  runAsUser:
+    rule: MustRunAs
+    ranges:
+      - min: 0
+        max: 65535
+
+  volumes:
+    - configMap
+    - downwardAPI
+    - emptyDir
+    - projected
+    - secret
+    - persistentVolumeClaim
+    - hostPath
+  allowedCapabilities:
+    - "*"
