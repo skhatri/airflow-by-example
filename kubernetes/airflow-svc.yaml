@@ -1,0 +1,14 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: airflow
+spec:
+  selector:
+    app: airflow
+  ports:
+    - name: airflowport
+      protocol: TCP
+      port: 8280
+      targetPort: airflowport
+  type: LoadBalancer

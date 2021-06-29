@@ -7,4 +7,5 @@ export.json
 __pycache__
 postgres-data
 logs
+tmp
 

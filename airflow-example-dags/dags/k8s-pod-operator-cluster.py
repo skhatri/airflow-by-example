@@ -35,8 +35,7 @@ kubernetes_min_pod = kubernetes_pod_operator.KubernetesPodOperator(
     cmds=['echo'],
     namespace='default',
     image='ubuntu:latest',
-    in_cluster=in_cluster,
-    executor_config={"LocalExecutor": {}}
+    in_cluster=in_cluster
     )
 
 
@@ -46,9 +45,8 @@ run_another_pod = kubernetes_pod_operator.KubernetesPodOperator(
     cmds=['echo'],
     namespace='default',
     image='ubuntu:latest',
-    in_cluster=in_cluster,
-    executor_config={"LocalExecutor": {}}
-    )
+    in_cluster=in_cluster
+)
 
 
 start_kube_process >> kubernetes_min_pod >> run_another_pod

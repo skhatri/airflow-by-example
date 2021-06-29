@@ -9,6 +9,10 @@ then
   cp -r /opt/airflow-template/* /opt/airflow
 fi;
 
+echo "Airflow Executor: ${AIRFLOW__CORE__EXECUTOR}"
+
+
+
 case "$1" in
   embedded)
     airflow db init
@@ -16,13 +20,19 @@ case "$1" in
     airflow scheduler &
     exec airflow webserver
     ;;
-  webserver|worker|scheduler)
+  scheduler)
+    airflow db init
+    airflow users create -u admin -p admin -r Admin -e admin@gmail.com -f Admin -l User
+    airflow scheduler
+    ;;
+  webserver|worker)
     exec airflow "$@"
     ;;
   version)
     exec airflow "$@"
    ;;
    *)
+    echo "Command $@"
     exec "$@"
    ;;
 esac

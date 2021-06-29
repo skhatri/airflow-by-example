@@ -1,66 +1,68 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: airflow
+  name: airflow-scheduler
   labels:
-    app: airflow
+    app: airflow-scheduler
 spec:
-  serviceName: airflow
+  serviceName: airflow-scheduler
   replicas: 1
   selector:
     matchLabels:
-      app: airflow
+      app: airflow-scheduler
   template:
     metadata:
       labels:
-        app: airflow
+        app: airflow-scheduler
     spec:
       serviceAccountName: job-trigger-sa
-      initContainers:
-      - name: airflow-dags
+      containers:
+      - name: airflow-dags-sync
         imagePullPolicy: IfNotPresent
-        image: "kubesailmaker/git-checkout:0.6"
-        command:
-        - /bin/sh
-        args:
-        - -c
-        - "cd /data/checkout; /opt/app/git-checkout.sh"
+        image: "k8s.gcr.io/git-sync:v3.1.0"
+
         securityContext:
-          runAsUser: 1000
+          runAsUser: 65534
           runAsNonRoot: true
           readOnlyRootFilesystem: true
         env:
-        - name: GIT_PROJECTS
-          value: "skhatri/airflow-example-dags.git,/data/checkout/airflow-example-dags,main"
-        - name: GIT_PROTOCOL
-          value: "https"
-        - name: "GIT_BASE"
-          value: "github.com"
-        - name: GIT_USER
-          value: "skhatri"
-        - name: GIT_TOKEN_FILE
-          value: "/data/secrets/git_token"
+          - name: GIT_SYNC_REPO
+            value: https://github.com/skhatri/airflow-example-dags
+          - name: GIT_SYNC_BRANCH
+            value: main
+          - name: AIRFLOW__KUBERNETES__GIT_SUBPATH
+            value: dags
+          - name: GIT_SYNC_WAIT
+            value: "300"
+          - name: GIT_SYNC_USERNAME
+            value: skhatri
+          - name: GIT_SYNC_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: airflow-secrets
+                key: GIT_TOKEN
+          - name: GIT_SYNC_ROOT
+            value: /data/checkout
+          - name: GIT_SYNC_DEST
+            value: work-dir
         volumeMounts:
-        - mountPath: /data/checkout
-          name: airflow-dags
-        - mountPath: /data/secrets
-          name: secrets-mount
-        - name: tmp-dir
-          mountPath: /tmp
-      containers:
+          - mountPath: /data/checkout
+            name: airflow-dags
+          - mountPath: /tmp
+            name: tmp-dir
+
       - name: airflow
         imagePullPolicy: IfNotPresent
-        #image: "kubesailmaker/airflow:2.0.0-python3.8-b3"
-        image: "192.168.64.1:5000/airflow_webserver:2.1.3.6"
+        image: "skhatri/airflow:2.0.10"
         args: 
-        - embedded
+        - scheduler
         securityContext:
           runAsUser: 50000
           runAsNonRoot: true 
           readOnlyRootFilesystem: true
         ports:
-        - name: airflowport
-          containerPort: 8280
+          - name: logport
+            containerPort: 8973
         resources:
           limits:
             cpu: "600m"
@@ -69,36 +71,35 @@ spec:
             cpu: "600m"
             memory: 1600Mi  
         env:
-        - name: LOADEX
-          value: "n"
         - name: "AIRFLOW__CORE__EXECUTOR"
-          value: "SequentialExecutor"
-        - name: AIRFLOW__KUBERNETES__IN_CLUSTER
+          value: "LocalExecutor"
+        - name: "AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL"
+          value: "60"
+        - name: "AIRFLOW__SCHEDULER__CATCHUP_BY_DEFAULT"
+          value: "False"
+        - name: "AIRFLOW__WEBSERVER__LOG_FETCH_TIMEOUT_SEC"
+          value: "60"
+        - name: "AIRFLOW__CORE__REMOTE_LOGGING"
+          value: "False"
+
+        - name: "AIRFLOW__KUBERNETES__IN_CLUSTER"
           value: "True"
         - name: "AIRFLOW__KUBERNETES__DELETE_WORKER_PODS"
           value: "True"
-        - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY"
-          value: "192.168.64.1:5000/airflow_dags"
-        - name: "AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG"
-          value: "2.1.3.6"
         - name: "AIRFLOW__ADMIN__HIDE_SENSITIVE_VARIABLE_FIELDS"
           value: "True"
         - name: "AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION"
           value: "True"
-        - name: "AIRFLOW__WEBSERVER__NAVBAR_COLOR"
-          value: "#9fca08"
         - name: "AIRFLOW__KUBERNETES__DAGS_IN_IMAGE"
-          value: "True"          
+          value: "False"
         - name: "AIRFLOW__KUBERNETES__WORKER_SERVICE_ACCOUNT_NAME"
           value: "job-trigger-sa"
         - name: "AIRFLOW_TEST_CONFIG"
           value: "/opt/airflow-work-dir/unittests.cfg"
         - name: "AIRFLOW_CONFIG"
           value: "/opt/airflow/airflow.cfg"
-        - name: "WEBSERVER_CONFIG"
-          value: "/opt/airflow/webserver_config.py"
         - name: "AIRFLOW__CORE__DAGS_FOLDER"
-          value: "/opt/app/dags"
+          value: "/opt/app/dags-checkout/work-dir"
         - name: "AIRFLOW__LOGGING__BASE_LOG_FOLDER"
           value: "/opt/app/logs"
         - name: "AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT"
@@ -106,13 +107,13 @@ spec:
         - name: "AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT"
           value: "300"
         - name: "SPARK_LAUNCHER_IMAGE"
-          value: "192.168.64.1:5000/spark:v3.0.1-b1"
+          value: "skhatri/spark:3.1.1"
         - name: "SPARK_JOB_IMAGE"
-          value: "192.168.64.1:5000/spark-k8s-hello:1.0.11"
+          value: "skhatri/spark-k8s-hello:1.0.11"
         - name: "AUTH_TYPE"
           value: "DB"
         volumeMounts:
-        - mountPath: /opt/app/dags
+        - mountPath: /opt/app/dags-checkout
           name: airflow-dags
         - mountPath: /opt/app/logs
           name: airflow-logs-dir
@@ -143,19 +144,5 @@ spec:
       - name: airflow-work-dir
         emptyDir: {}
       - name: work-dir
-        emptyDir: {}         
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: airflow
-spec:
-  selector:
-    app: airflow
-  ports:
-  - name: airflowport
-    protocol: TCP
-    port: 8280
-    targetPort: airflowport
-    nodePort: 31800
-  type: NodePort
+        emptyDir: {}
+

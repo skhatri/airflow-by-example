@@ -12,6 +12,7 @@ Each example is available in a branch of its own. Here is the list of examples:
 |5-airflow-kubernetes-executor|Run Airflow Tasks with Kubernetes Executor|
 |6-airflow-oauth|Integrate Airflow with Keycloak as the OAuth provider|
 |7-run-as-non-root|Run Airflow Kubernetes workloads as non root user|
+|8-scaling-airflow-k8s|Run Airflow with separate Scheduler, GitSync and Error Handling|
 
 ### Running
 
@@ -128,9 +129,9 @@ Create service account and grant roles to create/delete pod
 
 ```
 kubectl apply -f rbac/policies-default.yaml
-kubectl apply -f rbac/policies-job.yaml
+kubectl apply -f rbac/policies-jobs.yaml
 
-kubectl apply -f sa-postgres.yaml
+kubectl apply -f rbac/sa-postgres.yaml
 kubectl apply -f rbac/sa.yaml
 kubectl apply -f rbac/rbac.yaml
 ```
@@ -173,6 +174,10 @@ as the registry base.
 kubectl apply -f kubernetes/postgres.yaml
 kubectl create secret generic airflow-secrets --from-file=GIT_TOKEN=secrets/GIT_TOKEN
 kubectl apply -f kubernetes/airflow.yaml
+
+kubectl apply -f kubernetes/airflow-scheduler.yaml
+kubectl apply -f kubernetes/airflow-webserver.yaml
+kubectl apply -f kubernetes/airflow-svc.yaml
 ```
 
 #### Running Kubernetes Executor
@@ -366,3 +371,18 @@ cd /tmp/data
 psql -Upostgres keycloak < keycloak.pgsql
 psql -Upostgres airflow < airflow.pgsql 
 ```
+
+### 8-scaling-airflow-k8s
+#### Separate Scheduler
+We can use the same airflow image to run the scheduler separately. This will help with scaling for additional workloads. The
+webserver and scheduler can be deployed or restarted independently.
+
+```
+kubectl apply -f kubernetes/airflow-scheduler.yaml
+kubectl apply -f kubernetes/airflow-webserver.yaml
+kubectl apply -f kubernetes/airflow-svc.yaml
+```
+
+As of Airflow 2.0, Webserver does not require the dag files but scheduler does. airflow-scheduler.yaml has a separate
+sidecar configured with it which uses git-sync image to periodically synchronise data from git source.
+

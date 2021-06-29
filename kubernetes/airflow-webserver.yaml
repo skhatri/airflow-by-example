@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow
+  labels:
+    app: airflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: airflow
+  template:
+    metadata:
+      labels:
+        app: airflow
+    spec:
+      serviceAccountName: job-trigger-sa
+      containers:
+        - name: airflow
+          imagePullPolicy: IfNotPresent
+          image: "skhatri/airflow:2.0.10"
+          args:
+            - webserver
+          securityContext:
+            runAsUser: 50000
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+          ports:
+            - name: airflowport
+              containerPort: 8280
+          resources:
+            limits:
+              cpu: "500m"
+              memory: 1500Mi
+            requests:
+              cpu: "500m"
+              memory: 1500Mi
+          env:
+            - name: "AIRFLOW__WEBSERVER__WORKERS"
+              value: "2"
+            - name: "AIRFLOW__WEBSERVER__EXPOSE_CONFIG"
+              value: "False"
+            - name: "AIRFLOW__WEBSERVER__INSTANCE_NAME"
+              value: "Airflow Dev"
+            - name: "AIRFLOW__WEBSERVER__NAVBAR_COLOR"
+              value: "#9fca08"
+            - name: "AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT"
+              value: "300"
+            - name: "AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT"
+              value: "300"
+            - name: "AIRFLOW__WEBSERVER__LOG_FETCH_TIMEOUT_SEC"
+              value: "30"
+
+
+            - name: "AIRFLOW__ADMIN__HIDE_SENSITIVE_VARIABLE_FIELDS"
+              value: "True"
+            - name: "AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION"
+              value: "True"
+            - name: "AUTH_TYPE"
+              value: "DB"
+
+            - name: "AIRFLOW_TEST_CONFIG"
+              value: "/opt/airflow-work-dir/unittests.cfg"
+            - name: "AIRFLOW_CONFIG"
+              value: "/opt/airflow/airflow.cfg"
+            - name: "WEBSERVER_CONFIG"
+              value: "/opt/airflow/webserver_config.py"
+            - name: "AIRFLOW__LOGGING__BASE_LOG_FOLDER"
+              value: "/opt/app/logs"
+
+          volumeMounts:
+            - mountPath: /opt/app/logs
+              name: airflow-logs-dir
+            - mountPath: /opt/airflow
+              name: airflow-home
+            - mountPath: /opt/work
+              name: work-dir
+            - mountPath: /tmp
+              name: tmp-dir
+            - mountPath: /opt/airflow-work-dir
+              name: airflow-work-dir
+
+      volumes:
+        - name: airflow-home
+          emptyDir: {}
+        - name: airflow-logs-dir
+          emptyDir: {}
+        - name: tmp-dir
+          emptyDir: {}
+        - name: airflow-work-dir
+          emptyDir: {}
+        - name: work-dir
+          emptyDir: {}

@@ -15,7 +15,7 @@ import datetime
 from airflow import models
 
 
-launcher_image=os.getenv("SPARK_LAUNCHER_IMAGE", "skhatri/spark:v3.0.1-b1")
+launcher_image=os.getenv("SPARK_LAUNCHER_IMAGE", "skhatri/spark:3.1.1")
 job_image = "spark.kubernetes.container.image=%s" % (os.getenv("SPARK_JOB_IMAGE", "skhatri/spark-k8s-hello:1.0.9"))
 in_cluster = os.getenv("IN_CLUSTER", "True") == 'True'
 
@@ -128,8 +128,7 @@ k8s_pod = kubernetes_pod_operator.KubernetesPodOperator(
     cmds=['echo'],
     namespace='default',
     image='ubuntu:latest',
-    in_cluster=in_cluster,
-    executor_config={"LocalExecutor": {}}
+    in_cluster=in_cluster
 )
 
 k8s_pod_dag_start >> k8s_pod >> k8s_spark_launcher >> k8s_pod_dag_finish
