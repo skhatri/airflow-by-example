@@ -14,6 +14,10 @@ Each example is available in a branch of its own. Here is the list of examples:
 |7-run-as-non-root|Run Airflow Kubernetes workloads as non root user|
 |8-scaling-airflow-k8s|Run Airflow with separate Scheduler, GitSync and Error Handling|
 
+### Airflow Image
+A readonly airflow image can be pulled from ```skhatri/airflow:latest```
+
+
 ### Running
 
 ```

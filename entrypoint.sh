@@ -20,12 +20,12 @@ case "$1" in
     airflow scheduler &
     exec airflow webserver
     ;;
-  scheduler)
+  init-scheduler)
     airflow db init
     airflow users create -u admin -p admin -r Admin -e admin@gmail.com -f Admin -l User
     airflow scheduler
     ;;
-  webserver|worker)
+  webserver|worker|scheduler)
     exec airflow "$@"
     ;;
   version)
