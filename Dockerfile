@@ -5,7 +5,7 @@ RUN mkdir -p /opt/app
 RUN mv /opt/airflow /opt/airflow-template
 
 VOLUME [ "/opt/airflow" ]
-RUN chown -R airflow /opt/app /opt/airflow
+RUN chown -R airflow /opt/app /opt/airflow &&  addgroup --gid 1000 airflow && usermod -a -G airflow airflow
 
 USER airflow
 RUN /usr/local/bin/python -m pip install --upgrade pip && \
