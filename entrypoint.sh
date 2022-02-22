@@ -12,7 +12,6 @@ fi;
 echo "Airflow Executor: ${AIRFLOW__CORE__EXECUTOR}"
 echo "Command: ${1}"
 
-
 case "$1" in
   embedded)
     airflow db init
@@ -28,6 +27,9 @@ case "$1" in
   init)
     airflow db init
     airflow users create -u admin -p admin -r Admin -e admin@gmail.com -f Admin -l User
+    ;;
+  upgrade)
+    airflow db upgrade
     ;;
   webserver|worker|scheduler)
     exec airflow "$@"
