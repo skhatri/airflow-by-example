@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-./build-image.sh 2.0.12 skhatri/ yes
+./build-image.sh 2.2.3.1 skhatri/ yes
 
 
 

@@ -10,7 +10,7 @@ then
 fi;
 
 echo "Airflow Executor: ${AIRFLOW__CORE__EXECUTOR}"
-
+echo "Command: ${1}"
 
 
 case "$1" in
@@ -24,6 +24,10 @@ case "$1" in
     airflow db init
     airflow users create -u admin -p admin -r Admin -e admin@gmail.com -f Admin -l User
     airflow scheduler
+    ;;
+  init)
+    airflow db init
+    airflow users create -u admin -p admin -r Admin -e admin@gmail.com -f Admin -l User
     ;;
   webserver|worker|scheduler)
     exec airflow "$@"
